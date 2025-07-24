@@ -1,3 +1,7 @@
+import os
+
+API_TOKEN = os.getenv("API_TOKEN")
+SPREADSHEET_NAME = os.getenv("SPREADSHEET_NAME")
 import datetime
 from datetime import datetime, timezone, timedelta
 import gspread
