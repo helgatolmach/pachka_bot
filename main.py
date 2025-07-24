@@ -23,11 +23,11 @@ SEND_HOUR = 8
 
 # Получаем JSON с ключами из переменной окружения
 creds_json_str = os.getenv("GOOGLE_CREDENTIALS_JSON")
-
+# Заменяем двойные обратные слеши на реальные переносы строки
+fixed_json_str = creds_json_str.replace('\\n', '\n')
 # Создаем временный файл с содержимым
 with tempfile.NamedTemporaryFile(mode="w+", delete=False) as temp:
-    # Заменяем двойные обратные слеши на реальные переносы строки
-    fixed_json_str = creds_json_str.replace('\\n', '\n')
+    
     temp.write(fixed_json_str)
     temp.flush()
     creds_file_path = temp.name
