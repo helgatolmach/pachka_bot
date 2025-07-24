@@ -39,8 +39,6 @@ creds = ServiceAccountCredentials.from_json_keyfile_name(creds_file_path, SCOPE)
 os.remove(creds_file_path)
 
 # Google Таблица и доступ к ней
-SCOPE = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-CREDS_FILE = "creds.json"  # Путь к твоему JSON с учетными данными Google API
 SPREADSHEET_NAME = "Поздравления"  # Имя таблицы
 
 # API Пачки
@@ -84,7 +82,7 @@ def main():
         return
 
     # Авторизация и подключение к Google Таблице
-    creds = ServiceAccountCredentials.from_json_keyfile_name(CREDS_FILE, SCOPE)
+    creds = ServiceAccountCredentials.from_json_keyfile_name(creds, SCOPE)
     client = gspread.authorize(creds)
 
     sheet = client.open(SPREADSHEET_NAME).sheet1
