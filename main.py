@@ -39,7 +39,7 @@ creds = ServiceAccountCredentials.from_json_keyfile_name(creds_file_path, SCOPE)
 os.remove(creds_file_path)
 
 # Google Таблица и доступ к ней
-SPREADSHEET_NAME = "Поздравления"  # Имя таблицы
+SPREADSHEET_NAME = "Поздравлялка"  # Имя таблицы
 
 # API Пачки
 API_URL = "https://crm.pachca.com/api/send_message"
