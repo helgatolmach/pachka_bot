@@ -26,7 +26,9 @@ creds_json_str = os.getenv("GOOGLE_CREDENTIALS_JSON")
 
 # Создаем временный файл с содержимым
 with tempfile.NamedTemporaryFile(mode="w+", delete=False) as temp:
-    temp.write(creds_json_str)
+    # Заменяем двойные обратные слеши на реальные переносы строки
+    fixed_json_str = creds_json_str.replace('\\n', '\n')
+    temp.write(fixed_json_str)
     temp.flush()
     creds_file_path = temp.name
 
@@ -38,8 +40,6 @@ creds = ServiceAccountCredentials.from_json_keyfile_name(creds_file_path, SCOPE)
 
 os.remove(creds_file_path)
 
-# Google Таблица и доступ к ней
-SPREADSHEET_NAME = "Поздравлялка"  # Имя таблицы
 
 # API Пачки
 API_URL = "https://crm.pachca.com/api/send_message"
