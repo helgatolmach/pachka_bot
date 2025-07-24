@@ -1,12 +1,16 @@
 import os
-
-API_TOKEN = os.getenv("API_TOKEN")
-SPREADSHEET_NAME = os.getenv("SPREADSHEET_NAME")
+import json
+import tempfile
 import datetime
 from datetime import datetime, timezone, timedelta
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import requests
+
+
+API_TOKEN = os.getenv("API_TOKEN")
+SPREADSHEET_NAME = os.getenv("SPREADSHEET_NAME")
+CHAT_ID = os.getenv ("CHAT_ID")
 
 # --- Настройки ---
 
@@ -17,6 +21,23 @@ moscow_tz = timezone(moscow_offset, name="MSK")
 # Время отправки сообщений — 8:00 по Москве
 SEND_HOUR = 8
 
+# Получаем JSON с ключами из переменной окружения
+creds_json_str = os.getenv("GOOGLE_CREDENTIALS_JSON")
+
+# Создаем временный файл с содержимым
+with tempfile.NamedTemporaryFile(mode="w+", delete=False) as temp:
+    temp.write(creds_json_str)
+    temp.flush()
+    creds_file_path = temp.name
+
+# Авторизация с помощью временного файла
+SCOPE = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+creds = ServiceAccountCredentials.from_json_keyfile_name(creds_file_path, SCOPE)
+
+# После этого можно удалить временный файл (если хочешь)
+
+os.remove(creds_file_path)
+
 # Google Таблица и доступ к ней
 SCOPE = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 CREDS_FILE = "creds.json"  # Путь к твоему JSON с учетными данными Google API
@@ -24,8 +45,6 @@ SPREADSHEET_NAME = "Поздравления"  # Имя таблицы
 
 # API Пачки
 API_URL = "https://crm.pachca.com/api/send_message"
-API_TOKEN = "1wyA04RgG4yJzuldO5qaMcNbKs2WwNrRz5Wy9EGN9Fc"  # Твой API-ключ
-CHAT_ID = 26904273  # ID чата, куда отправлять сообщения
 
 HEADERS = {
     "Authorization": f"Bearer {API_TOKEN}"
