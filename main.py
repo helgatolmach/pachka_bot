@@ -26,7 +26,7 @@ creds_json_str = os.getenv("GOOGLE_CREDENTIALS_JSON")
 # Создаем временный файл с содержимым
 with tempfile.NamedTemporaryFile(mode="w+", delete=False) as temp:
     
-    temp.write(fixed_json_str)
+    temp.write(creds_json_str)
     temp.flush()
     creds_file_path = temp.name
 
