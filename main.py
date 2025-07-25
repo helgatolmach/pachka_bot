@@ -1,11 +1,11 @@
 import os
-import json
 import tempfile
 import datetime
-from datetime import datetime, timezone, timedelta
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+from datetime import datetime, timezone, timedelta
 import requests
+from oauth2client.service_account import ServiceAccountCredentials
+
 
 
 API_TOKEN = os.getenv("API_TOKEN")
@@ -23,8 +23,6 @@ SEND_HOUR = 8
 
 # Получаем JSON с ключами из переменной окружения
 creds_json_str = os.getenv("GOOGLE_CREDENTIALS_JSON")
-# Заменяем двойные обратные слеши на реальные переносы строки
-fixed_json_str = creds_json_str.replace('\\n', '\n')
 # Создаем временный файл с содержимым
 with tempfile.NamedTemporaryFile(mode="w+", delete=False) as temp:
     
