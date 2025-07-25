@@ -1,5 +1,5 @@
 import os
-import tempfile
+from tempfile import NamedTemporaryFile
 import datetime
 import gspread
 from datetime import datetime, timezone, timedelta
@@ -21,20 +21,31 @@ moscow_tz = timezone(moscow_offset, name="MSK")
 # Время отправки сообщений — 8:00 по Москве
 SEND_HOUR = 8
 
-# Получаем JSON с ключами из переменной окружения
-creds_json_str = os.getenv("GOOGLE_CREDENTIALS_JSON")
-# Создаем временный файл с содержимым
-with tempfile.NamedTemporaryFile(mode="w+", delete=False) as temp:
-    
-    temp.write(creds_json_str)
-    temp.flush()
-    creds_file_path = temp.name
+creds_dict = {
+    "type": os.getenv("TYPE"),
+    "project_id": os.getenv("PROJECT_ID"),
+    "private_key_id": os.getenv("PRIVATE_KEY_ID"),
+    "private_key": os.getenv("PRIVATE_KEY").replace('\\n', '\n'),
+    "client_email": os.getenv("CLIENT_EMAIL"),
+    "client_id": os.getenv("CLIENT_ID"),
+    "auth_uri": os.getenv("AUTH_URI"),
+    "token_uri": os.getenv("TOKEN_URI"),
+    "auth_provider_x509_cert_url": os.getenv("AUTH_PROVIDER_X509_CERT_URL"),
+    "client_x509_cert_url": os.getenv("CLIENT_X509_CERT_URL"),
+    "universe_domain": os.getenv("UNIVERSE_DOMAIN"),
+}
 
-# Авторизация с помощью временного файла
-SCOPE = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+
+from tempfile import NamedTemporaryFile
+with NamedTemporaryFile(mode='w+', delete=False, suffix='.json') as tmp:
+    import json
+    json.dump(creds_dict, tmp)
+    tmp.flush()
+    creds_file_path = tmp.name
+
+
+SCOPE = ['https://www.googleapis.com/auth/spreadsheets']
 creds = ServiceAccountCredentials.from_json_keyfile_name(creds_file_path, SCOPE)
-
-# После этого можно удалить временный файл (если хочешь)
 
 os.remove(creds_file_path)
 
