@@ -18,8 +18,6 @@ CHAT_ID = os.getenv ("CHAT_ID")
 moscow_offset = timedelta(hours=3)
 moscow_tz = timezone(moscow_offset, name="MSK")
 
-# Время отправки сообщений — 8:00 по Москве
-SEND_HOUR = 8
 
 creds_dict = {
     "type": os.getenv("TYPE"),
@@ -36,44 +34,21 @@ creds_dict = {
 }
 
 
-from tempfile import NamedTemporaryFile
-with NamedTemporaryFile(mode='w+', delete=False, suffix='.json') as tmp:
-    import json
-    json.dump(creds_dict, tmp)
-    tmp.flush()
-    creds_file_path = tmp.name
-
-
-SCOPE = ['https://www.googleapis.com/auth/spreadsheets']
-creds = ServiceAccountCredentials.from_json_keyfile_name(creds_file_path, SCOPE)
-
-os.remove(creds_file_path)
-
-
 # API Пачки
-API_URL = "https://crm.pachca.com/api/send_message"
+API_URL = "https://api.pachca.com/api/shared/v1/messages"
 
 HEADERS = {
     "Authorization": f"Bearer {API_TOKEN}"
-}
-
-# Праздники с датами в формате "дд.мм"
-HOLIDAYS = {
-    "01.01": "С Новым годом!",
-    "08.03": "С 8 марта!",
-    "23.02": "С 23 февраля!",
-    "01.05": "С праздником Весны и Труда!",
-    "09.05": "С Днём Победы!",
-    "12.06": "С Днём России!",
-    "24.07": "С праздником! 🎉 (Тестовая дата)"
 }
 
 
 def send_message(text: str):
     """Функция отправки сообщения в Пачку"""
     payload = {
-        "entity_id": CHAT_ID,
-        "message": text
+        "message": {
+            "entity_id": CHAT_ID,
+            "content": text
+        }
     }
     try:
         response = requests.post(API_URL, json=payload, headers=HEADERS)
@@ -84,45 +59,43 @@ def send_message(text: str):
 
 
 def main():
-    # Проверяем, что сейчас нужный час (8:00 МСК)
-    now = datetime.now(moscow_tz)
-    if now.hour != SEND_HOUR:
-        print(f"Сейчас не время отправки сообщений. Время: {now.strftime('%H:%M')}. Выход.")
-        return
 
-    # Авторизация и подключение к Google Таблице
-    creds = ServiceAccountCredentials.from_json_keyfile_name(creds, SCOPE)
+    from tempfile import NamedTemporaryFile
+    with NamedTemporaryFile(mode='w+', delete=False, suffix='.json') as tmp:
+        import json
+        json.dump(creds_dict, tmp)
+        tmp.flush()
+        creds_file_path = tmp.name
+
+
+    SCOPE = ['https://www.googleapis.com/auth/spreadsheets.readonly']
+    creds = ServiceAccountCredentials.from_json_keyfile_name(creds_file_path, SCOPE)
+
     client = gspread.authorize(creds)
 
-    sheet = client.open(SPREADSHEET_NAME).sheet1
-    rows = sheet.get_all_records()
+    sheet = client.open_by_key(SPREADSHEET_NAME)
+    worksheet = sheet.sheet1
+    rows = worksheet.get_all_records()
 
+    now = datetime.now(moscow_tz)
     today_str = now.strftime("%d.%m")
 
     # Отправляем поздравления с днем рождения
     for row in rows:
         # В таблице предполагаем, что дата рождения в формате строка "дд.мм" или число
-        birthday_raw = row.get('Birthday')
-        if birthday_raw is None:
-            continue
+        date_str = str(row.get('Date'))
 
-        # Приводим дату к строке в формате "дд.мм"
-        if isinstance(birthday_raw, float) or isinstance(birthday_raw, int):
-            # Если дата в виде числа с точкой, например 24.07
-            birthday_str = f"{birthday_raw:.2f}".replace('.', '.')
-        else:
-            birthday_str = str(birthday_raw).strip()
-
-        if birthday_str == today_str:
-            name = row.get('Name', 'коллега')
-            # Формируем сообщение с упоминанием
-            message = f"🎉 Сегодня день рождения у @{name}! Поздравим!"
-            send_message(message)
-
-    # Отправляем поздравления с праздниками
-    if today_str in HOLIDAYS:
-        holiday_message = HOLIDAYS[today_str]
-        send_message(f"🎉 {holiday_message}")
+        if date_str == today_str:
+            type = row.get('Type')
+            if type == "Birthday":
+                name = row.get('Name', 'коллега')
+                # Формируем сообщение с упоминанием
+                message = f"🎉 Сегодня день рождения у @{name}! Поздравим!"
+                send_message(message)
+            elif type == "Holiday":
+                name = row.get('Name')
+                message = f"Сегодня {name}! С праздником, коллеги!"
+                send_message(message)
 
 
 if __name__ == "__main__":
